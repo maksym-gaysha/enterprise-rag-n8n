@@ -31,10 +31,12 @@ async_session_maker = async_sessionmaker(
 
 async def init_db() -> None:
     """Initialize database extensions and verify connectivity."""
-    logger.info("Initializing database and verifying pgvector extension...")
+    logger.info("Initializing database, verifying pgvector extension and creating tables...")
     async with engine.begin() as conn:
         await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-    logger.info("Database and pgvector extension successfully initialized.")
+        from app.models import Base
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database schema and pgvector extension successfully initialized.")
 
 
 async def close_db() -> None:

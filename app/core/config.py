@@ -25,8 +25,9 @@ class Settings(BaseSettings):
     POSTGRES_HOST: str = "postgres-db"
     POSTGRES_PORT: int = 5432
 
-    # Gemini API Key (Reserved for Ingestion & Retrieval milestones)
+    # Gemini API Key & Model Configuration
     GEMINI_API_KEY: str = ""
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
 
     @computed_field
     @property
