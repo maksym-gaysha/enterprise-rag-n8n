@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     # Gemini API Key & Model Configuration
     GEMINI_API_KEY: str = ""
     EMBEDDING_MODEL: str = "gemini-embedding-001"
+    LLM_MODEL: str = "gemini-2.5-flash"
 
     @computed_field
     @property

@@ -1,3 +1,8 @@
+from app.schemas.chat import (
+    ChatQueryRequest,
+    ChatResponse,
+    SourceReference,
+)
 from app.schemas.document import (
     DocumentListItem,
     DocumentListResponse,
@@ -10,4 +15,7 @@ __all__ = [
     "DocumentStatusResponse",
     "DocumentListItem",
     "DocumentListResponse",
+    "ChatQueryRequest",
+    "SourceReference",
+    "ChatResponse",
 ]
