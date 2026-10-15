@@ -41,10 +41,33 @@ services:
     networks:
       - rag-network
 
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: enterprise-rag-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE:-UTC}
+      - TZ=${TZ:-UTC}
+      - N8N_SECURE_COOKIE=false
+      - WEBHOOK_URL=${WEBHOOK_URL:-}
+      - N8N_WEBHOOK_URL=${WEBHOOK_URL:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - api
+    networks:
+      - rag-network
+
 volumes:
   postgres_data:
+    driver: local
+  n8n_data:
     driver: local
 
 networks:
   rag-network:
     driver: bridge
+

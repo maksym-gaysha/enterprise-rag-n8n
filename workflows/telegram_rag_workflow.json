@@ -1,0 +1,117 @@
+{
+  "name": "Enterprise RAG - Telegram Q&A Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "9f7a1c84-3c82-4c28-971e-0d17e54c0b41",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        300
+      ],
+      "webhookId": "rag-telegram-webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/v1/chat/query",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"question\": \"{{ $json.message.text }}\",\n  \"top_k\": 4\n}",
+        "options": {}
+      },
+      "id": "2b314ec1-21bb-4591-9e20-ea04432a1e0b",
+      "name": "Query RAG API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst triggerData = $('Telegram Trigger').item.json;\nconst chatId = triggerData.message?.chat?.id;\n\nlet messageText = '';\n\nif (!item || !item.answer) {\n  messageText = '⚠️ *Entschuldigung*, ich konnte keine Antwort auf Ihre Anfrage erhalten. Bitte versuchen Sie es später erneut.';\n} else {\n  messageText = `🤖 *Antwort:*\\n${item.answer}\\n\\n`;\n\n  // Confidence badge\n  const confidenceEmoji = item.confidence === 'high' ? '🟢' : (item.confidence === 'medium' ? '🟡' : '🔴');\n  messageText += `📊 *Konfidenz:* ${confidenceEmoji} ${String(item.confidence || 'unbekannt').toUpperCase()}\\n`;\n\n  // Sources & Citations\n  if (item.sources && item.sources.length > 0) {\n    messageText += `\\n📚 *Quellen & Zitate:*\\n`;\n    item.sources.forEach((source, index) => {\n      const pageStr = source.page_number ? ` (Seite ${source.page_number})` : '';\n      const scorePercent = Math.round((source.similarity_score || 0) * 100);\n      messageText += `\\n*${index + 1}.* 📄 \\`${source.document_name}\\`${pageStr} — _Ähnlichkeit: ${scorePercent}%_\\n`;\n      if (source.excerpt) {\n        const cleanExcerpt = source.excerpt.replace(/\\s+/g, ' ').slice(0, 180);\n        messageText += `> _\"${cleanExcerpt}\"..._\\n`;\n      }\n    });\n  }\n}\n\nreturn {\n  json: {\n    chatId: chatId,\n    text: messageText\n  }\n};"
+      },
+      "id": "c0183b54-7546-4475-b829-913a890479d2",
+      "name": "Format Response & Citations",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "id": "5db8e791-31f0-4dc6-b51e-613d2847a93a",
+      "name": "Send Telegram Reply",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        920,
+        300
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Query RAG API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Query RAG API": {
+      "main": [
+        [
+          {
+            "node": "Format Response & Citations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Response & Citations": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1e9c20a-6f4e-4f3d-9d41-3d7589f2a0b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "enterprise-rag-n8n"
+  }
+}
