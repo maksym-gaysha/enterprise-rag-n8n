@@ -293,7 +293,7 @@ curl -X POST "http://localhost:8000/api/v1/chat/query" \
 
 ---
 
-## 📂 Project Directory Structure
+## Project Directory Structure
 
 ```text
 enterprise-rag-n8n/
